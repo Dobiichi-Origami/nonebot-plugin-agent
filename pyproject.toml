@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "nonebot-plugin-agent"
+version = "0.0.1"
+description = "A Agent shceduling nonebot2 plugin via user natural language inpput"
+authors = ["Dobiichi-Origami <56953648+Dobiichi-Origami@users.noreply.github.com>"]
+license = "GPL3.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+openai = "^0.28.0"
+nonebot2 = "^2.1.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "tuna"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
