@@ -2,7 +2,10 @@ import asyncio
 import datetime
 import json
 from typing import List, AnyStr, Callable, Tuple, Optional, Any
-from .action import BaseAction, ToolAction, FinalAction, LLMAction
+
+from nonebot import logger
+
+from .action import BaseAction, ToolAction, FinalAction, LLMAction, HumanAction
 from .llm import BaseFunctionCallLLM, Tool
 
 
@@ -42,8 +45,10 @@ class FunctionCaller:
             self,
             user_input: AnyStr,
     ) -> (AnyStr, List[BaseAction], bool):
+        logger.info("user input: " + user_input)
         calling_round = 0
         start_timestamp = datetime.datetime.now()
+        self.intermedia_actions.append(HumanAction(question=user_input))
         while calling_round <= self.max_calling_round \
                 and (datetime.datetime.now() - start_timestamp).seconds <= self.max_timeout_in_seconds:
             next_action: BaseAction = await self.function_call_llm.async_generate_next_action(
@@ -52,20 +57,20 @@ class FunctionCaller:
                 inputs=user_input,
             )
 
+            self.intermedia_actions.append(next_action)
             if isinstance(next_action, FinalAction):
-                return next_action.return_val, self.intermedia_actions, True
+                return next_action.return_val, self.intermedia_actions, False
             elif isinstance(next_action, LLMAction):
-                return next_action.reply, self.intermedia_actions, False
+                return next_action.reply, self.intermedia_actions, True
             elif isinstance(next_action, ToolAction):
                 tool_need_for_calling = self.tool_set[next_action.tool_name]
                 if asyncio.iscoroutinefunction(tool_need_for_calling):
                     func = tool_need_for_calling.function
                 else:
                     func = async_wrapper(tool_need_for_calling.function)
-
                 tool_result = await func(**next_action.tool_arg)
-                next_action.tool_result = tool_result
-                self.intermedia_actions.append(next_action)
+                logger.info("tool result: " + tool_result)
+                self.intermedia_actions[-1].tool_result = tool_result
 
             calling_round += 1
         return "等待超时或重试轮次过多", [], False

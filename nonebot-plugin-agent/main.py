@@ -1,3 +1,5 @@
+import json
+
 from nonebot import on_regex
 from nonebot.internal.adapter import Event
 from nonebot.params import RegexStr, RegexDict
@@ -10,17 +12,17 @@ from .llm import OpenAIFunctionCallLLM
 matcher = on_regex(".*")
 
 
-def funcx(a: int, b: int) -> str:
-    return str(int(a) + int(b))
+def funcx(account: str, password: str) -> str:
+    return str(len(account) + len(password))
 
 
-llm = OpenAIFunctionCallLLM("your_key", "your_base")
+llm = OpenAIFunctionCallLLM("your_api_key", "your_base")
 tool = Tool(funcx,
             {
-                "a": {"type": "string", "description": "number 1"},
-                "b": {"type": "string", "description": "number 2"}
+                "account": {"type": "string", "description": "user's steam account"},
+                "password": {"type": "string", "description": "user's steam password"}
             },
-            "used to sum 2 numbers in 1 number")
+            "this function helps user calculating their amount of games in steam library, needing account and password of steam")
 
 
 hashtable = {}
@@ -35,10 +37,10 @@ async def handle(inputs = RegexStr(), event: Event = None):
     result, history, continuex = await caller(inputs)
     if continuex:
         logger.info("继续")
-        hashtable[event.get_user_id()] = history
     else:
         logger.info("结束")
-        hashtable[event.get_user_id()] = []
+
+    hashtable[event.get_user_id()] = history[-10:]
     await matcher.finish(result)
 
 

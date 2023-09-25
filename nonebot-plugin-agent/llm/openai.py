@@ -2,6 +2,7 @@ import json
 import os
 
 from openai import ChatCompletion
+from nonebot import logger
 
 from .base import BaseFunctionCallLLM, Tool
 from typing import AnyStr, Optional, List, Any, Tuple, Dict
@@ -36,18 +37,22 @@ class OpenAIFunctionCallLLM(BaseFunctionCallLLM):
     ) -> BaseAction:
         tool_list = self.__class__._get_tool_list(tools)
         history_messages = self.__class__._get_message(intermedia_actions)
-        if len(history_messages) == 1:
-            history_messages.append({"role": "user", "content": inputs})
 
+        logger.info("sent messages:" + json.dumps(history_messages, ensure_ascii=False))
         response = await self._get_chat_completion(messages=history_messages, functions=tool_list)
+        logger.info("openAI response: " + json.dumps(response, ensure_ascii=False))
+
         message = response[_CHOICES][0]
         status = message[_FINISH_REASON]
+        result = message[_MESSAGE]["content"]
 
         if status == _STATUS_FUNCTION_CALL:
             call_info = message[_MESSAGE][_FUNCTION_CALL]
-            return ToolAction(tool_name=call_info["name"], tool_arg=json.loads(call_info["arguments"]))
+            if len(call_info["arguments"]) != 0:
+                return ToolAction(tool_name=call_info["name"], tool_arg=json.loads(call_info["arguments"]))
+            else:
+                return LLMAction(reply=result)
         elif status == _STATUS_STOP:
-            result = message[_MESSAGE]["content"]
             if await self._check_is_problem_solved(inputs, result):
                 return FinalAction(return_val=result)
             else:
@@ -79,6 +84,7 @@ class OpenAIFunctionCallLLM(BaseFunctionCallLLM):
         ]
 
         message: str = (await self._get_chat_completion(messages=messages))[_CHOICES][0][_MESSAGE]["content"]
+        logger.info(message)
         return message == "YES"
 
     async def _get_chat_completion(self, **kwargs):
