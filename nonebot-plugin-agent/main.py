@@ -1,46 +1,36 @@
-import json
-
-from nonebot import on_regex
+from nonebot import on_message
 from nonebot.internal.adapter import Event
-from nonebot.params import RegexStr, RegexDict
-import nonebot.params
+from nonebot.params import EventPlainText
+from nonebot.rule import to_me
 from nonebot import logger
 
 from .base import FunctionCaller, Tool
-from .llm import OpenAIFunctionCallLLM
+from .llm import LLM_Type
 
-matcher = on_regex(".*")
-
-
-def funcx(account: str, password: str) -> str:
-    return str(len(account) + len(password))
+matcher = on_message(rule=to_me(), priority=100)
 
 
-llm = OpenAIFunctionCallLLM("your_api_key", "your_base")
-tool = Tool(funcx,
-            {
-                "account": {"type": "string", "description": "user's steam account"},
-                "password": {"type": "string", "description": "user's steam password"}
-            },
-            "this function helps user calculating their amount of games in steam library, needing account and password of steam")
-
-
-hashtable = {}
+# def funcx(account: str, password: str) -> str:
+#     return str(len(account) + len(password))
+#
+#
+# Tool.add_to_tool_list(
+#     funcx,
+#     {
+#         "account": {"type": "string", "description": "user's steam account"},
+#         "password": {"type": "string", "description": "user's steam password"}
+#     },
+#     "this function helps user calculating their amount of games in steam library, needing account and password of steam"
+# )
 
 
 @matcher.handle()
-async def handle(inputs = RegexStr(), event: Event = None):
-    logger.info("进入")
-    logger.info("这是输入: " + inputs)
-    history = hashtable.get(event.get_user_id(), [])
-    caller = FunctionCaller(llm, [tool], history)
-    result, history, continuex = await caller(inputs)
-    if continuex:
-        logger.info("继续")
-    else:
-        logger.info("结束")
+async def handle(inputs=EventPlainText(), event: Event = None):
+    logger.info("进入 agent 逻辑，用户输入: " + inputs)
+    caller = FunctionCaller(LLM_Type.OPENAI)
+    result = await caller(event.get_user_id(), inputs)
+    logger.info("LLM 返回: " + result)
 
-    hashtable[event.get_user_id()] = history[-10:]
     await matcher.finish(result)
 
 

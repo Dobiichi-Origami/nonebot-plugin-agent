@@ -1,10 +1,15 @@
+import enum
 from abc import ABC, abstractmethod
+from copy import deepcopy
 
-from typing import AnyStr, List, Callable, Tuple, Dict, Any, Optional
-from ..action import BaseAction, FinalAction, ToolAction
+from typing import AnyStr, List, Callable, Dict, Any, Optional, Union
+from ..action import BaseAction
 
 
 class Tool:
+
+    _tool_maps: Dict = {}
+
     def __init__(
             self,
             function: Callable,
@@ -16,6 +21,24 @@ class Tool:
         self.param_list = param_list
         self.description = description
         self.required = []
+
+    @classmethod
+    def add_to_tool_list(
+        cls,
+        function: Callable,
+        param_list: Dict[AnyStr, Any],
+        description: Optional[AnyStr],
+    ):
+        t = Tool(function, param_list, description)
+        cls._tool_maps[t.name] = t
+
+    @classmethod
+    def get_tool_list(cls) -> Dict:
+        return deepcopy(cls._tool_maps)
+
+
+class LLM_Type(enum):
+    OPENAI = "openai"
 
 
 class BaseFunctionCallLLM(ABC):

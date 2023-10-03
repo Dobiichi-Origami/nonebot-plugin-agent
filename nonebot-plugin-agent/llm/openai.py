@@ -30,10 +30,10 @@ class OpenAIFunctionCallLLM(BaseFunctionCallLLM):
         self.api_model = api_model
 
     async def async_generate_next_action(
-        self,
-        tools: Dict[AnyStr, Tool],
-        intermedia_actions: List[BaseAction],
-        inputs: AnyStr
+            self,
+            tools: Dict[AnyStr, Tool],
+            intermedia_actions: List[BaseAction],
+            inputs: AnyStr
     ) -> BaseAction:
         tool_list = self.__class__._get_tool_list(tools)
         history_messages = self.__class__._get_message(intermedia_actions)
@@ -85,7 +85,7 @@ class OpenAIFunctionCallLLM(BaseFunctionCallLLM):
 
         message: str = (await self._get_chat_completion(messages=messages))[_CHOICES][0][_MESSAGE]["content"]
         logger.info(message)
-        return message == "YES"
+        return message.upper() == "YES"
 
     async def _get_chat_completion(self, **kwargs):
         return await ChatCompletion.acreate(
@@ -94,7 +94,6 @@ class OpenAIFunctionCallLLM(BaseFunctionCallLLM):
             model=self.api_model,
             **kwargs
         )
-
 
     @staticmethod
     def _get_tool_list(tools: Dict[AnyStr, Tool]) -> List[Dict[AnyStr, Any]]:
@@ -136,6 +135,3 @@ class OpenAIFunctionCallLLM(BaseFunctionCallLLM):
                     "content": action.reply
                 })
         return messages
-
-
-
