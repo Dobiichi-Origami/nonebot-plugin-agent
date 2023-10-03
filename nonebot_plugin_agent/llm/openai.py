@@ -20,14 +20,15 @@ _STATUS_STOP = "stop"
 class OpenAIFunctionCallLLM(BaseFunctionCallLLM):
     def __init__(
             self,
-            api_key: Optional[AnyStr] = None,
-            api_base: Optional[AnyStr] = None,
-            api_model: Optional[AnyStr] = "gpt-3.5-turbo-0613",
+            open_api_key: Optional[AnyStr] = None,
+            open_api_base: Optional[AnyStr] = None,
+            open_api_model: Optional[AnyStr] = "gpt-3.5-turbo-0613",
+            **kwargs
     ):
-        self.api_key = api_key if api_key else os.environ.get("OPENAI_API_KEY")
-        self.api_base = api_base if api_base \
+        self.api_key = open_api_key if open_api_key else os.environ.get("OPENAI_API_KEY")
+        self.api_base = open_api_base if open_api_base \
             else os.environ.get("OPENAI_API_BASE") if os.environ.get("OPENAI_API_BASE") else None
-        self.api_model = api_model
+        self.api_model = open_api_model
 
     async def async_generate_next_action(
             self,
@@ -38,9 +39,9 @@ class OpenAIFunctionCallLLM(BaseFunctionCallLLM):
         tool_list = self.__class__._get_tool_list(tools)
         history_messages = self.__class__._get_message(intermedia_actions)
 
-        logger.info("sent messages:" + json.dumps(history_messages, ensure_ascii=False))
+        logger.info("发送信息:" + json.dumps(history_messages, ensure_ascii=False))
         response = await self._get_chat_completion(messages=history_messages, functions=tool_list)
-        logger.info("openAI response: " + json.dumps(response, ensure_ascii=False))
+        logger.info("OpenAI 回复: " + json.dumps(response, ensure_ascii=False))
 
         message = response[_CHOICES][0]
         status = message[_FINISH_REASON]
@@ -84,7 +85,7 @@ class OpenAIFunctionCallLLM(BaseFunctionCallLLM):
         ]
 
         message: str = (await self._get_chat_completion(messages=messages))[_CHOICES][0][_MESSAGE]["content"]
-        logger.info(message)
+        logger.info("检查信息发送: " + message)
         return message.upper() == "YES"
 
     async def _get_chat_completion(self, **kwargs):
@@ -134,4 +135,11 @@ class OpenAIFunctionCallLLM(BaseFunctionCallLLM):
                     "role": "assistant",
                     "content": action.reply
                 })
+            elif isinstance(action, FinalAction):
+                messages.append({
+                    "role": "assistant",
+                    "content": action.return_val
+                })
+            else:
+                raise TypeError("未知的 Action 类型: " + str(type(action)))
         return messages

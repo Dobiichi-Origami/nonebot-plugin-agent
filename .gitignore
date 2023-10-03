@@ -1,3 +1,4 @@
 nonebot_plugin_agent/__pycache__
 .idea
+dist
 main.py

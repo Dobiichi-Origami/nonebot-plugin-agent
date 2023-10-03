@@ -3,7 +3,7 @@ name = "nonebot-plugin-agent"
 version = "0.0.1"
 description = "A Agent shceduling nonebot2 plugin via user natural language inpput"
 authors = ["Dobiichi-Origami <56953648+Dobiichi-Origami@users.noreply.github.com>"]
-license = "GPL3.0"
+license = "GPLv3"
 readme = "README.md"
 
 [tool.poetry.dependencies]

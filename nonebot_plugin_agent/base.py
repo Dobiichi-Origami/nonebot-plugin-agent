@@ -29,7 +29,7 @@ def convert_result_into_str(result: Any) -> AnyStr:
 class FunctionCaller:
     def __init__(
             self,
-            llm_type: LLM_Type = LLM_Type.OPENAI,
+            llm_type: str = LLM_Type.OPENAI,
             max_calling_round: Optional[int] = 10,
             max_timeout_in_seconds: Optional[int] = 10,
             **kwargs
@@ -48,9 +48,8 @@ class FunctionCaller:
             self,
             user_id: AnyStr,
             user_input: AnyStr,
+            **kwargs,
     ) -> AnyStr:
-        logger.info("user input: " + user_input)
-
         calling_round = 0
         start_timestamp = datetime.datetime.now()
         tools = Tool.get_tool_list()
@@ -78,7 +77,7 @@ class FunctionCaller:
                     else:
                         func = async_wrapper(tool_need_for_calling)
                     tool_result = await func(**next_action.tool_arg)
-                    logger.info("tool result: " + tool_result)
+                    logger.info("工具 {} 输出: ".format(next_action.tool_name) + tool_result)
                     intermedia_actions[-1].tool_result = tool_result
 
                 calling_round += 1
