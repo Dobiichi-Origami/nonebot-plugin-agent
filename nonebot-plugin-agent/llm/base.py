@@ -2,7 +2,7 @@ import enum
 from abc import ABC, abstractmethod
 from copy import deepcopy
 
-from typing import AnyStr, List, Callable, Dict, Any, Optional, Union
+from typing import AnyStr, List, Callable, Dict, Any, Optional
 from ..action import BaseAction
 
 
@@ -37,7 +37,7 @@ class Tool:
         return deepcopy(cls._tool_maps)
 
 
-class LLM_Type(enum):
+class LLM_Type:
     OPENAI = "openai"
 
 
