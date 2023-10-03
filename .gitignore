@@ -1,2 +1,3 @@
-nonebot-plugin-agent/__pycache__
+nonebot_plugin_agent/__pycache__
 .idea
+main.py

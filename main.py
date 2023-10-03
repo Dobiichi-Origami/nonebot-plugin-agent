@@ -8,7 +8,7 @@ nonebot.init()
 driver = nonebot.get_driver()
 driver.register_adapter(ConsoleAdapter)
 
-nonebot.load_plugins("nonebot-plugin-agent")  # 本地插件
+nonebot.load_plugin("nonebot_plugin_agent")  # 本地插件
 
 if __name__ == "__main__":
     nonebot.run()
